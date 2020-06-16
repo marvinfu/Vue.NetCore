@@ -123,6 +123,7 @@ namespace DairyStar.Builder.Services
 
         /// <summary>
         /// 获取Mysql表结构信息
+        /// 2020.06.14增加对mysql数据类型double区分
         /// </summary>
         /// <returns></returns>
         private string GetMySqlModelInfo()
@@ -138,8 +139,10 @@ DISTINCT
                 'int'
                 WHEN data_type in ( 'BIGINT','bigint') THEN
                 'bigint'
-                WHEN data_type IN('FLOAT', 'DOUBLE', 'DECIMAL','float', 'double', 'decimal') THEN
+                WHEN data_type IN('FLOAT',  'DECIMAL','float', 'decimal') THEN
                 'decimal'
+							 WHEN data_type IN( 'DOUBLE', 'double') THEN
+                'double'
                 WHEN data_type IN('CHAR', 'VARCHAR', 'TINY TEXT', 'TEXT', 'MEDIUMTEXT', 'LONGTEXT', 'TINYBLOB', 'BLOB', 'MEDIUMBLOB', 'LONGBLOB', 'Time','char', 'varchar', 'tiny text', 'text', 'mediumtext', 'longtext', 'tinyblob', 'blob', 'mediumblob', 'longblob', 'time') THEN
                 'nvarchar'
                 WHEN data_type IN('Date', 'DateTime', 'TimeStamp','date', 'datetime', 'timestamp') THEN
@@ -178,7 +181,36 @@ DISTINCT
                                                                                   AND epTwo.name = 'MS_Description'
                                       WHERE     obj.name =@tableName) AS t";
         }
-
+        /// <summary>
+        /// 获取PgSQl表结构信息
+        /// </summary>
+        /// <returns></returns>
+        private string GetPgSqlModelInfo()
+        {
+            throw new Exception("开发中");
+            //            return $@"
+            //	SELECT DISTINCT
+            //    a.attnum as num,
+            //    a.attname as name,
+            //    format_type(a.atttypid, a.atttypmod) as typ,
+            //    a.attnotnull as notnull, 
+            //    com.description as comment,
+            //    coalesce(i.indisprimary,false) as primary_key,
+            //    def.adsrc as default
+            //FROM pg_attribute a 
+            //JOIN pg_class pgc ON pgc.oid = a.attrelid
+            //LEFT JOIN pg_index i ON 
+            //    (pgc.oid = i.indrelid AND i.indkey[0] = a.attnum)
+            //LEFT JOIN pg_description com on 
+            //    (pgc.oid = com.objoid AND a.attnum = com.objsubid)
+            //LEFT JOIN pg_attrdef def ON 
+            //    (a.attrelid = def.adrelid AND a.attnum = def.adnum)
+            //WHERE a.attnum > 0 AND pgc.oid = a.attrelid
+            //AND pg_table_is_visible(pgc.oid)
+            //AND NOT a.attisdropped
+            //AND pgc.relname = @tableName  -- Your table name here
+            //ORDER BY a.attnum;";
+        }
 
         private WebResponseContent ExistsTable(string tableName, string tableTrueName)
         {
@@ -248,9 +280,30 @@ DISTINCT
             }
 
             List<Sys_TableColumn> list = sysTableInfo.TableColumns;
-            List<TableColumnInfo> tableColumnInfoList = repository.DapperContext.QueryList<TableColumnInfo>(
-                DBType.Name == DbCurrentType.MySql.ToString() ? GetMySqlModelInfo() : GetSqlServerModelInfo(),
-                new { tableName = tableName });
+            List<TableColumnInfo> tableColumnInfoList = new List<TableColumnInfo>();
+            switch (DBType.Name)
+            {
+                case "MySql":
+                    {
+                        tableColumnInfoList = repository.DapperContext.QueryList<TableColumnInfo>(
+                            GetMySqlModelInfo(), new { tableName = tableName });
+                        break;
+                    }
+                case "SqlServer":
+                    {
+                        tableColumnInfoList = repository.DapperContext.QueryList<TableColumnInfo>(
+                             GetSqlServerModelInfo(), new { tableName = tableName });
+                        break;
+                    }
+                case "PgSql":
+                    {
+                        tableColumnInfoList = repository.DapperContext.QueryList<TableColumnInfo>(
+                            GetPgSqlModelInfo(), new { tableName = tableName });
+                        break;
+                    }
+                default: break;
+            }
+
 
 
             string msg = CreateEntityModel(list, sysTableInfo, tableColumnInfoList, 1);
@@ -318,11 +371,22 @@ DISTINCT
                 tableName = tableInfo.TableTrueName;
             }
 
+            string sql;
+            if (DBType.Name.ToLower() == DbCurrentType.MySql.ToString().ToLower())
+            {
+                sql = GetMySqlStructure(tableName);
+            }
+            else if (DBType.Name.ToLower() == DbCurrentType.PgSql.ToString().ToLower())
+            {
+                throw new Exception("开发中");
+            }
+            else
+            {
+                sql = GetSqlServerStructure(tableName);
+            }
             //获取表结构
             List<Sys_TableColumn> columns = repository.DapperContext
-                  .QueryList<Sys_TableColumn>(
-                  IsMysql() ? GetMySqlStructure(tableName) : GetSqlServerStructure(tableName),
-                  new { tableName });
+                  .QueryList<Sys_TableColumn>(sql, new { tableName });
             if (columns == null || columns.Count == 0)
                 return webResponse.Error("未获取到【" + tableName + "】表结构信息，请确认表是否存在");
 
@@ -1545,6 +1609,12 @@ DISTINCT
             //}
             if (!string.IsNullOrEmpty(tableInfo.TableTrueName) && tableInfo.TableName != tableInfo.TableTrueName)
             {
+                string tableTrueName = tableInfo.TableTrueName;
+                //2020.06.14 pgsql数据库，设置表名为小写(数据库创建表的时候也要使用小写)
+                if (DBType.Name == DbCurrentType.PgSql.ToString())
+                {
+                    tableTrueName = tableTrueName.ToLower();
+                }
                 tableAttr = tableAttr + "\r\n[Table(\"" + tableInfo.TableTrueName + "\")]";
             }
             domainContent = domainContent.Replace("{AttributeManager}", tableAttr).Replace("{Namespace}", modelNameSpace);

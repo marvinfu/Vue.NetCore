@@ -926,7 +926,9 @@ export default {
         return this.getSelectFormatter(column, val);
       }
       let source = column.bind.data.filter(x => {
-        return x.key != "" && x.key == val;
+        // return x.key != "" && x.key == val;
+        //2020.06.06修复单独使用table组件时,key为数字0时转换成文本失败的问题
+        return x.key !== "" && x.key !== undefined && x.key + "" === val + "";
       });
       if (source && source.length > 0) val = source[0].value;
       return val;
@@ -936,7 +938,8 @@ export default {
       let valArr = val.split(",");
       for (let index = 0; index < valArr.length; index++) {
         column.bind.data.forEach(x => {
-          if (x.key != "" && x.key == valArr[index]) {
+           //2020.06.06修复数据源为selectList时,key为数字0时不能转换文本的问题
+          if (x.key !== "" && x.key !== undefined && x.key+'' == valArr[index]+'') {
             valArr[index] = x.value;
           }
         });
