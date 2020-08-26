@@ -82,7 +82,7 @@
       <li>
         <span
           style="line-height:3;font-size:16px;"
-        >后台：VS2019、.NetCore3.1 、EFCore3.1、JWT、Dapper、Autofac、SqlServer/MySql、Redis(可选)</span>
+        >后台：VS2019、.NetCore3.1 、EFCore3.1、JWT、Dapper、Autofac、SqlServer/MySql/PGSql、Redis(可选)</span>
       </li>
       <li>
         <span
@@ -116,7 +116,11 @@
           <span style="font-size:16px;">默认端口是9991。</span>
         </span>
       </li>
-      <li>
+    <li >
+        <span style="color: #03A9F4;">(dev_run.bat如果闪退，请使用cmd切换至 ../VOL.WebApi目录下执行dotnet run看异常信息)</span>
+      </li>
+ 
+      <li style=" margin-top: 20px;">
         <span
           style="color:#E56600;"
         >如从没执行过npm install命令，使用cmd命令切换至前端Vue项目../VOL.Vue路径下,执行npm install命令</span>
@@ -133,6 +137,9 @@
             <span style="font-family:微软雅黑;font-size:16px;white-space:normal;">run.bat</span>命令点击启动
           </span>。
         </span>
+      </li>
+       <li >
+        <span style="color: #03A9F4;">(run.bat如果闪退,说明环境没配置好，请使用cmd切换至 ../VOL.Vue目录下执行npm run dev看异常信息)</span>
       </li>
       <li
         style="box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0px;padding:0px;"
@@ -679,6 +686,22 @@
           >
             <span style="color:#666666;font-size:14px;white-space:normal;">√</span>
             <br />
+          </td>
+        </tr>
+            <tr>
+          <td
+            style="box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0px;padding:7px;color:rgba(111, 93, 93, 0.87);font-size:13px;border-collapse:collapse;min-width:60px;border:1px solid #D4D1D1;"
+          >
+            <span style="color:#666666;font-size:14px;">多租户</span>
+          </td>
+          <td
+            style="box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0px;padding:7px;color:rgba(111, 93, 93, 0.87);font-size:13px;border-collapse:collapse;min-width:60px;border:1px solid #D4D1D1;"
+          ></td>
+          <td
+            style="box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0px;padding:7px;color:rgba(111, 93, 93, 0.87);font-size:13px;border-collapse:collapse;min-width:60px;border:1px solid #D4D1D1;"
+          >
+            <span style="color:#666666;font-size:14px;">√</span>
+            <span style="display:none;"></span>
           </td>
         </tr>
         <tr>
